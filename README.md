@@ -6,7 +6,7 @@ It allows random generation of music driven by initial settings read on standard
 
 The input must follow the below structure:
 ```
-2                     # Number of pieces generated
+2                     -- Number of pieces generated
 
 -- Piece 1 settings
 2                     -- Tonic note (0 = C, 1 = C#, ..., 11 = B)                        
