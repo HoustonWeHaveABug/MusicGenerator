@@ -70,6 +70,9 @@ int add_set_to_line(piece_t *, line_t *, int, int, chord_class_t);
 set_t *create_set(line_t *);
 int choose_notes(piece_t *, line_t *, int [], int [], int, int, int []);
 int compare_ints(const void *, const void *);
+void copy_notes(int [], int, int []);
+void notes_best_octave(line_t *, int [], int, int *, int *);
+void shift_notes(int [], int, int, int []);
 void increment_set_duration(set_t *, int);
 int test_fraction(int []);
 int erand(int, int);
@@ -384,7 +387,7 @@ set_t *create_set(line_t *line) {
 }
 
 int choose_notes(piece_t *piece, line_t *line, int richness_freqs[], int chord_idx[], int chord_size, int chord_position, int notes[]) {
-	int richness_freqs_rand = erand(richness_freqs[chord_size], 0), notes_n, notes_tmp[CHORD7_SIZE], notes_idx;
+	int richness_freqs_rand = erand(richness_freqs[chord_size], 0), notes_n, notes_tmp[NOTES_N_MAX], notes_idx;
 
 	/* Choose notes according to chord position and richness */
 	for (notes_n = 0; notes_n <= chord_size && richness_freqs[notes_n] <= richness_freqs_rand; notes_n++);
@@ -397,45 +400,33 @@ int choose_notes(piece_t *piece, line_t *line, int richness_freqs[], int chord_i
 		while (prev_idx < notes_idx);
 	}
 	if (notes_n > 0) {
-		int shift = erand(notes_n, 0), notes_min, notes_max, variance, variance_next;
+		int shift_best = 0, variance_best, octave_best, shift, notes_min, notes_max;
 
-		/* Sort then shift selected notes */
+		/* Sort selected notes */
 		qsort(notes_tmp, (size_t)notes_n, sizeof(int), compare_ints);
-		if (shift > 0) {
-			for (notes_idx = 0; notes_idx < notes_n-shift; notes_idx++) {
-				notes[notes_idx+shift] = notes_tmp[notes_idx]+OCTAVE_SIZE;
+
+		/* Choose shift/octave that best fits pitch reference */
+		copy_notes(notes_tmp, notes_n, notes);
+		notes_best_octave(line, notes, notes_n, &variance_best, &octave_best);
+		for (shift = 1; shift < notes_n; shift++) {
+			int variance, octave;
+			shift_notes(notes_tmp, notes_n, shift, notes);
+			notes_best_octave(line, notes, notes_n, &variance, &octave);
+			if (variance < variance_best) {
+				shift_best = shift;
+				variance_best = variance;
+				octave_best = octave;
 			}
-			for (; notes_idx < notes_n; notes_idx++) {
-				notes[notes_idx+shift-notes_n] = notes_tmp[notes_idx];
-			}
+		}
+		if (shift_best == 0) {
+			copy_notes(notes_tmp, notes_n, notes);
 		}
 		else {
-			for (notes_idx = 0; notes_idx < notes_n; notes_idx++) {
-				notes[notes_idx] = notes_tmp[notes_idx];
-			}
+			shift_notes(notes_tmp, notes_n, shift_best, notes);
 		}
-
-		/* Adjust octave in accordance with pitch reference */
-		variance = 0;
 		for (notes_idx = 0; notes_idx < notes_n; notes_idx++) {
-			variance += abs(notes[notes_idx]-line->pitch_ref);
+			notes[notes_idx] += OCTAVE_SIZE*octave_best;
 		}
-		do {
-			variance_next = 0;
-			for (notes_idx = 0; notes_idx < notes_n; notes_idx++) {
-				variance_next += abs(notes[notes_idx]+OCTAVE_SIZE-line->pitch_ref);
-			}
-			if (variance_next < variance) {
-				for (notes_idx = 0; notes_idx < notes_n; notes_idx++) {
-					notes[notes_idx] += OCTAVE_SIZE;
-				}
-				variance = variance_next;
-			}
-			else {
-				break;
-			}
-		}
-		while (1);
 
 		/* Remove notes not included in pitch range */
 		for (notes_min = 0; notes_min < notes_n && notes[notes_min] < line->pitch_min; notes_min++);
@@ -451,6 +442,49 @@ int choose_notes(piece_t *piece, line_t *line, int richness_freqs[], int chord_i
 int compare_ints(const void *a, const void *b) {
 	const int *int_a = (const int *)a, *int_b = (const int *)b;
 	return *int_a-*int_b;
+}
+
+void copy_notes(int notes_a[], int notes_n, int notes_b[]) {
+	int notes_idx;
+	for (notes_idx = 0; notes_idx < notes_n; notes_idx++) {
+		notes_b[notes_idx] = notes_a[notes_idx];
+	}
+}
+
+void notes_best_octave(line_t *line, int notes[], int notes_n, int *variance, int *octave) {
+int notes_idx;
+	*variance = 0;
+	for (notes_idx = 0; notes_idx < notes_n; notes_idx++) {
+		*variance += abs(notes[notes_idx]-line->pitch_ref);
+	}
+	*octave = 0;
+	do {
+		int variance_next = 0;
+		for (notes_idx = 0; notes_idx < notes_n; notes_idx++) {
+			variance_next += abs(notes[notes_idx]+OCTAVE_SIZE-line->pitch_ref);
+		}
+		if (variance_next < *variance) {
+			for (notes_idx = 0; notes_idx < notes_n; notes_idx++) {
+				notes[notes_idx] += OCTAVE_SIZE;
+			}
+			*variance = variance_next;
+			*octave = *octave+1;
+		}
+		else {
+			break;
+		}
+	}
+	while (1);
+}
+
+void shift_notes(int notes_a[], int notes_n, int shift, int notes_b[]) {
+	int notes_idx;
+	for (notes_idx = 0; notes_idx < notes_n-shift; notes_idx++) {
+		notes_b[notes_idx+shift] = notes_a[notes_idx]+OCTAVE_SIZE;
+	}
+	for (; notes_idx < notes_n; notes_idx++) {
+		notes_b[notes_idx+shift-notes_n] = notes_a[notes_idx];
+	}
 }
 
 void increment_set_duration(set_t *set, int duration) {
