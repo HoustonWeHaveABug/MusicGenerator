@@ -5,7 +5,7 @@ This program is a solution to challenge https://www.reddit.com/r/dailyprogrammer
 It allows random generation of music driven by initial settings read on standard input. The program can generate one or more pieces with a chords line and a melody line. The chords generated will determine the corresponding notes that may be played by the melody.
 
 The input must follow the below structure:
-
+```
 2                     # Number of pieces generated
 
 -- Piece 1 settings
@@ -42,9 +42,9 @@ The input must follow the below structure:
 0
 1
 0
-
+```
 The output generated has the below structure (1 line per note played):
-
+```
 ...
 81 48.80 0.80         -- Pitch/Start/Duration (start and duration are divided by 100)
 73 49.60 0.80
@@ -53,5 +53,5 @@ The output generated has the below structure (1 line per note played):
 74 50.80 0.20
 83 50.80 0.20
 ...
-
+```
 The output may be played in page http://ufx.space/stuff/procmusic/?tempo=120&wavetype=square&volume=0.1 (credit https://www.reddit.com/user/Cosmologicon).
