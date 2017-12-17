@@ -405,7 +405,7 @@ int choose_notes(piece_t *piece, line_t *line, int richness_freqs[], int chord_i
 		/* Sort selected notes */
 		qsort(notes_tmp, (size_t)notes_n, sizeof(int), compare_ints);
 
-		/* Choose shift/octave that best fits pitch reference */
+		/* Choose shift and octave that best fit pitch reference */
 		copy_notes(notes_tmp, notes_n, notes);
 		notes_best_octave(line, notes, notes_n, &variance_best, &octave_best);
 		for (shift = 1; shift < notes_n; shift++) {
@@ -452,7 +452,7 @@ void copy_notes(int notes_a[], int notes_n, int notes_b[]) {
 }
 
 void notes_best_octave(line_t *line, int notes[], int notes_n, int *variance, int *octave) {
-int notes_idx;
+	int notes_idx;
 	*variance = 0;
 	for (notes_idx = 0; notes_idx < notes_n; notes_idx++) {
 		*variance += abs(notes[notes_idx]-line->pitch_ref);
@@ -505,14 +505,14 @@ void print_piece(piece_t *piece, int start_offset) {
 }
 
 void print_line(line_t *line, int start_offset) {
-int sets_idx;
+	int sets_idx;
 	for (sets_idx = 0; sets_idx < line->sets_n; sets_idx++) {
 		print_set(line->sets+sets_idx, start_offset);
 	}
 }
 
 void print_set(set_t *set, int start_offset) {
-int notes_idx;
+	int notes_idx;
 	for (notes_idx = 0; notes_idx < set->notes_n; notes_idx++) {
 		printf("%d %.2lf %.2f\n", set->notes[notes_idx], (set->start+start_offset)/100.0, set->duration/100.0);
 	}
