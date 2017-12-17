@@ -2,7 +2,9 @@
 
 This program is a solution to challenge https://www.reddit.com/r/dailyprogrammer/comments/7ifbd5/20171208_challenge_343_hard_procedural_music/.
 
-It allows random generation of music driven by initial settings read on standard input. The program can generate one or more pieces with a chords line and a melody line. The chords generated will determine the corresponding notes that may be played by the melody.
+It allows random generation of music driven by initial settings read on standard input. The program can generate one or more pieces with a chords line and a melody line. The chords line will determine the corresponding notes that may be played by the melody line.
+
+A set of one or more notes played simultaneously may get their pitch adjusted by a certain number of octaves, and their order changed to be as much as possible in accordance with the line pitch reference. This reference is initially picked randomly in the range of the minimum/maximum pitches for each line, and then decremented/incremented randomly after each set of notes generated.
 
 The input must follow the below structure:
 ```
